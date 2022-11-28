@@ -1,0 +1,64 @@
+import csv
+
+
+class Subject:
+    def __init__(self, pid, processName):
+        self.pid = pid
+        self.processName = processName
+
+class Operation:
+    def __init__(self, operationName, eventDirection):
+        self.operationName = operationName
+        self.eventDirection = eventDirection
+
+class Object:
+    def __init__(self, pid, processName, fileName, sourceIp, sourcePort, destinationIp, destinationPort, protocol):
+        self.pid = pid
+        self.processName = processName
+        self.fileName = fileName
+        self.sourceIp = sourceIp
+        self.sourcePort = sourcePort
+        self.destinationIp = destinationIp
+        self.destinationPort = destinationPort
+        self.protocol = protocol
+
+class SysdigNode:
+    def __init__(self, subject, operation, object):
+        self.subject = subject
+        self.operation = operation
+        self.object = object
+
+def printSysdigNode(sysdigNode):
+    if sysdigNode.object.protocol:
+        print(sysdigNode.subject.pid, sysdigNode.subject.processName, sysdigNode.operation.operationName, sysdigNode.operation.eventDirection, \
+              sysdigNode.object.fileName, sysdigNode.object.sourceIp, sysdigNode.object.sourcePort, \
+                sysdigNode.object.destinationIp, sysdigNode.object.destinationPort, sysdigNode.object.protocol)
+
+def formatData(row):
+    """
+    format read data from csv file.
+    """
+    resultRow = []
+    for cell in row:
+        if len(cell) == 0:
+            resultRow.append(None)
+        else:
+            resultRow.append(cell)
+    return resultRow
+
+def readDataFromFile(filePath):
+    """
+    read parsed data from csv file.
+    """
+    results = []
+    with open(filePath, "r") as f:
+        csvFile = csv.reader(f)
+        for row in csvFile:
+            results.append(formatData(row))
+    return results
+
+if __name__ == "__main__":
+    """
+    Graph Generator execution starts here.
+    """
+    data = readDataFromFile("parsedData.csv")
