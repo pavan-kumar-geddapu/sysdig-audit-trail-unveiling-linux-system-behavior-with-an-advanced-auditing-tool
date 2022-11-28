@@ -87,4 +87,4 @@ if __name__ == "__main__":
     """
     data = extractFields("sysdig.txt")
     fields = ["pid", "processName", "operationName", "eventDirection", "fileName", "sourceIp", "sourcePort", "destinationIp", "destinationPort", "protocol"]
-    writeFile("parsedTuples.csv", fields, data)
+    writeFile("parsedData.csv", fields, data)

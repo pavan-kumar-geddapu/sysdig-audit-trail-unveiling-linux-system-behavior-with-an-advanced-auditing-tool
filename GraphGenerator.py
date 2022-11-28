@@ -1,3 +1,6 @@
+import csv
+
+
 class Subject:
     def __init__(self, pid, processName):
         self.pid = pid
@@ -30,3 +33,32 @@ def printSysdigNode(sysdigNode):
         print(sysdigNode.subject.pid, sysdigNode.subject.processName, sysdigNode.operation.operationName, sysdigNode.operation.eventDirection, \
               sysdigNode.object.fileName, sysdigNode.object.sourceIp, sysdigNode.object.sourcePort, \
                 sysdigNode.object.destinationIp, sysdigNode.object.destinationPort, sysdigNode.object.protocol)
+
+def formatData(row):
+    """
+    format read data from csv file.
+    """
+    resultRow = []
+    for cell in row:
+        if len(cell) == 0:
+            resultRow.append(None)
+        else:
+            resultRow.append(cell)
+    return resultRow
+
+def readDataFromFile(filePath):
+    """
+    read parsed data from csv file.
+    """
+    results = []
+    with open(filePath, "r") as f:
+        csvFile = csv.reader(f)
+        for row in csvFile:
+            results.append(formatData(row))
+    return results
+
+if __name__ == "__main__":
+    """
+    Graph Generator execution starts here.
+    """
+    data = readDataFromFile("parsedData.csv")
