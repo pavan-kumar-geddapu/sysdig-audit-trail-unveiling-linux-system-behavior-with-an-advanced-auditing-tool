@@ -18,16 +18,50 @@ class Backtrack:
         self.edgeAttrs = {}
         self.createEdgesForGraph()
 
+        self.graph = {}
+        self.createBackTrackGraph()
+
         self.vertexIdDict = {}
 
-    def createGraph(self):
+    def createBackTrackGraph(self):
         """
-        create graph using jgrapht.
+        create graph.
+        """
+        for edge in self.edges:
+            s, f = edge[0], edge[1]
+            if f in self.graph:
+                self.graph[f].append(s)
+            else:
+                self.graph[f] = [s]
+
+    def backtrackGraph(self, fileName):
+        """
+        back track graph from given file point.
         """
         graph = jgrapht.create_graph(directed=True, weighted=True, allowing_self_loops=False, allowing_multiple_edges=True, any_hashable=True)
 
-        graph.add_vertices_from(self.processVertices)
-        graph.add_vertices_from(self.fileVertices)
+        queue = []
+        visitedList = set()
+        for node in self.graph[fileName]:
+            e = (node, fileName)
+            queue.append(e)
+
+        while len(queue) > 0:
+            edge = queue.pop(0)
+            s, f = edge[0], edge[1]
+            visitedList.add(f)
+            graph.add_vertices_from([s, f])
+            e = graph.add_edge(s, f)
+            edgeAttr = str(self.simplifiedTime[self.edgeAttrs[edge][0]]) + "," + str(self.simplifiedTime[self.edgeAttrs[edge][1]])
+            graph.edge_attrs[e]['label'] = edgeAttr
+
+            edgeEndTime = self.simplifiedTime[self.edgeAttrs[edge][1]]
+            if s in self.graph and s not in visitedList:
+                for node in self.graph[s]:
+                    e = (node, s)
+                    if self.simplifiedTime[self.edgeAttrs[e][0]] <= edgeEndTime:
+                        queue.append(e)
+
         id = 0
         for v in graph.vertices:
             graph.vertex_attrs[v]['label'] = v
@@ -35,11 +69,6 @@ class Backtrack:
                 graph.vertex_attrs[v]['shape'] = "rectangle"
             self.vertexIdDict[v] = id
             id += 1
-
-        for edge in self.edges:
-            e = graph.add_edge(edge[0], edge[1])
-            edgeAttr = str(self.simplifiedTime[self.edgeAttrs[edge][0]]) + "," + str(self.simplifiedTime[self.edgeAttrs[edge][1]])
-            graph.edge_attrs[e]['label'] = edgeAttr
 
         graphDotString = jgrapht.io.exporters.generate_dot(graph, export_vertex_id_cb=self.exportVertexIdCb)
 
@@ -89,7 +118,7 @@ class Backtrack:
         results = self.readDataFromFile(filePath)
         times = []
         for row in results[1:]:
-            if row[4] and row[4] == "/home/pavan/Downloads/test.sh":
+            if row[4]:
                 self.data.append(((row[0], row[1]), (row[2], row[3], row[10]), (row[0], row[1], row[4], row[5], row[6], row[7], row[8], row[9])))
                 times.append(row[10])
         self.createSimplifiedTime(times)
@@ -164,4 +193,4 @@ if __name__ == "__main__":
     Graph Generator execution starts here.
     """
     backtrack = Backtrack("parsedData.csv")
-    backtrack.createGraph()
+    backtrack.backtrackGraph("/home/pavan/Downloads/test.sh")
