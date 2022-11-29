@@ -1,0 +1,13 @@
+digraph G {
+  0 [ label="110870 bash" shape="rectangle" ];
+  1 [ label="110899 cat" shape="rectangle" ];
+  2 [ label="110907 bash" shape="rectangle" ];
+  3 [ label="110938 bash" shape="rectangle" ];
+  4 [ label="104515 ThreadPoolForeg" shape="rectangle" ];
+  5 [ label="/home/pavan/Downloads/test.sh" ];
+  5 -> 0 [ label="0,1" ];
+  1 -> 5 [ label="2,5" ];
+  2 -> 5 [ label="6,15" ];
+  5 -> 3 [ label="16,17" ];
+  4 -> 5 [ label="18,19" ];
+}

@@ -1,48 +1,52 @@
 import csv
+
 import jgrapht
 
-class GraphGenerator:
-    """
-    Class for graph generation.
-    """
-    def __init__(self):
-        self._vertexIdDict = {}
 
-    def createGraph(self, data):
+class Backtrack:
+
+    def __init__(self, parsedLogFile):
+        self.data = []
+        self.simplifiedTime = {}
+        self.createTuples(parsedLogFile)
+
+        self.processVertices = []
+        self.fileVertices = []
+        self.createVerticesForGraph()
+
+        self.edges = []
+        self.edgeAttrs = {}
+        self.createEdgesForGraph()
+
+        self.vertexIdDict = {}
+
+    def createGraph(self):
         """
         create graph using jgrapht.
         """
         graph = jgrapht.create_graph(directed=True, weighted=True, allowing_self_loops=False, allowing_multiple_edges=True, any_hashable=True)
-        processVertices, fileVertices = self.getVerticesForGraph(data)
-        edges, edgeAttrs = self.getEdgesForGraph(data)
 
-        graph.add_vertices_from(processVertices)
-        graph.add_vertices_from(fileVertices)
-
-        for i in range(len(edges)):
-            e = graph.add_edge(edges[i][0], edges[i][1])
-            # graph.edge_attrs[e]['label'] = edgeAttrs[i]
-
-
+        graph.add_vertices_from(self.processVertices)
+        graph.add_vertices_from(self.fileVertices)
         id = 0
         for v in graph.vertices:
             graph.vertex_attrs[v]['label'] = v
-            if v in processVertices:
+            if v in self.processVertices:
                 graph.vertex_attrs[v]['shape'] = "rectangle"
-            self._vertexIdDict[v] = id
+            self.vertexIdDict[v] = id
             id += 1
+
+        for edge in self.edges:
+            e = graph.add_edge(edge[0], edge[1])
+            edgeAttr = str(self.simplifiedTime[self.edgeAttrs[edge][0]]) + "," + str(self.simplifiedTime[self.edgeAttrs[edge][1]])
+            graph.edge_attrs[e]['label'] = edgeAttr
 
         graphDotString = jgrapht.io.exporters.generate_dot(graph, export_vertex_id_cb=self.exportVertexIdCb)
 
         with open("initialGraph.dot", "w") as file:
             file.write(graphDotString)
             file.close()
-    def exportVertexIdCb(self, v):
-        """
-        export_vertex_id_cb function.
-        """
-        if v in self._vertexIdDict:
-            return self._vertexIdDict[v]
+
     def formatData(self, row):
         """
         format read data from csv file.
@@ -54,6 +58,7 @@ class GraphGenerator:
             else:
                 resultRow.append(cell)
         return resultRow
+
     def readDataFromFile(self, filePath):
         """
         read parsed data from csv file.
@@ -65,55 +70,98 @@ class GraphGenerator:
                 results.append(self.formatData(row))
         return results
 
-    def createTuples(self, data):
+    def createSimplifiedTime(self, times):
+        """
+        simplify nano sec time to start with 0 and get increment.
+        """
+        times.sort()
+        idx = 0
+        self.simplifiedTime[times[0]] = idx
+        for i in range(1, len(times)):
+            if times[i] != times[i - 1]:
+                idx += 1
+            self.simplifiedTime[times[i]] = idx
+
+    def createTuples(self, filePath):
         """
         create <subject, operation, object> tuples from data.
         """
-        results = []
-        for row in data[1:]:
+        results = self.readDataFromFile(filePath)
+        times = []
+        for row in results[1:]:
             if row[4]:
-                results.append(((row[0], row[1]), (row[2], row[3], row[10]), (row[0], row[1], row[4], row[5], row[6], row[7], row[8], row[9])))
-        return results
+                self.data.append(((row[0], row[1]), (row[2], row[3], row[10]), (row[0], row[1], row[4], row[5], row[6], row[7], row[8], row[9])))
+                times.append(row[10])
+        self.createSimplifiedTime(times)
 
-    def getVerticesForGraph(self, data):
+    def exportVertexIdCb(self, v):
+        """
+        export_vertex_id_cb function.
+        """
+        if v in self.vertexIdDict:
+            return self.vertexIdDict[v]
+
+    def createVerticesForGraph(self):
         """
         create Vertices for graph.
         """
-        processVertices = []
-        fileVertices = []
-        for row in data:
+        for row in self.data:
             process = str(row[0][0]) + " " + str(row[0][1])
             file = row[2][2]
-            if process not in processVertices:
-                processVertices.append(process)
-            if file not in fileVertices:
-                fileVertices.append(file)
-        return processVertices, fileVertices
+            if process not in self.processVertices:
+                self.processVertices.append(process)
+            if file not in self.fileVertices:
+                self.fileVertices.append(file)
 
-    def getEdgesForGraph(self, data):
+    def getMaxTime(self, t1, t2):
+        """
+        get max of two times in nano sec.
+        """
+        t1s, t1n = list(map(int, t1.split(".")))
+        t2s, t2n = list(map(int, t2.split(".")))
+        if t1s > t2s or (t1s == t2s and t1n > t2n):
+            return t1
+        return t2
+
+    def getMinTime(self, t1, t2):
+        """
+        get min of two times in nano sec.
+        """
+        t1s, t1n = list(map(int, t1.split(".")))
+        t2s, t2n = list(map(int, t2.split(".")))
+        if t1s > t2s or (t1s == t2s and t1n > t2n):
+            return t2
+        return t1
+
+    def createEdgesForGraph(self):
         """
         create edges for graph.
         """
-        edges = []
-        edgeAttrs = []
-        for row in data:
+        for row in self.data:
             process = str(row[0][0]) + " " + str(row[0][1])
             file = row[2][2]
             direction = row[1][1]
+            operation = row[1][0]
+            time = row[1][2]
+
+            key = None
             if direction == ">":
-                edges.append((process, file))
+                key = (process, file)
             else:
-                edges.append((file, process))
-            edgeAttrs.append(row[1][0])
-        return edges, edgeAttrs
+                key = (file, process)
 
-
+            if key in self.edges:
+                value = self.edgeAttrs[key]
+                minTime = self.getMinTime(value[0], time)
+                maxTime = self.getMaxTime(value[1], time)
+                self.edgeAttrs[key] = (minTime, maxTime)
+            else:
+                self.edges.append(key)
+                self.edgeAttrs[key] = (time, time)
 
 if __name__ == "__main__":
     """
     Graph Generator execution starts here.
     """
-    graphGenerator = GraphGenerator()
-    data = graphGenerator.readDataFromFile("parsedData.csv")
-    tuples = graphGenerator.createTuples(data)
-    graphGenerator.createGraph(tuples)
+    backtrack = Backtrack("parsedData.csv")
+    backtrack.createGraph()
