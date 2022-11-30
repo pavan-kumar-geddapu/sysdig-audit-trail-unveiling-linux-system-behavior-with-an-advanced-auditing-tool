@@ -73,7 +73,7 @@ class LogParser:
                 print("exception in parsing event: {}".format(entry))
 
             else:
-                if fileName and fileName[0] == "/":
+                if fileName:
                     result = [pid, processName, operationName, eventDirection, fileName, sourceIp, sourcePort, destinationIp, destinationPort, protocol, timeNanoSec]
                     results.append(result)
         return results
