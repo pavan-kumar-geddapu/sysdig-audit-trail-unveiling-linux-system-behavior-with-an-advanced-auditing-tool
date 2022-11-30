@@ -3,7 +3,7 @@ import csv
 import jgrapht
 
 
-class Backtrack:
+class GraphGenerator:
 
     def __init__(self, parsedLogFile):
         self.data = []
@@ -163,5 +163,5 @@ if __name__ == "__main__":
     """
     Graph Generator execution starts here.
     """
-    backtrack = Backtrack("parsedData.csv")
-    backtrack.createGraph()
+    graphGenerator = GraphGenerator("parsedData.csv")
+    graphGenerator.createGraph()
