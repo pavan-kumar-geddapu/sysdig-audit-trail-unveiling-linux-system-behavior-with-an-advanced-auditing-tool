@@ -38,7 +38,7 @@ class GraphGenerator:
 
         for edge in self.edges:
             e = graph.add_edge(edge[0], edge[1])
-            edgeAttr = str(self.simplifiedTime[self.edgeAttrs[edge][0]]) + "," + str(self.simplifiedTime[self.edgeAttrs[edge][1]])
+            edgeAttr = self.edgeAttrs[edge][2] + "," + str(self.simplifiedTime[self.edgeAttrs[edge][0]]) + "," + str(self.simplifiedTime[self.edgeAttrs[edge][1]])
             graph.edge_attrs[e]['label'] = edgeAttr
 
         graphDotString = jgrapht.io.exporters.generate_dot(graph, export_vertex_id_cb=self.exportVertexIdCb)
@@ -146,18 +146,18 @@ class GraphGenerator:
 
             key = None
             if direction == ">":
-                key = (process, file)
+                key = (process, file, operation)
             else:
-                key = (file, process)
+                key = (file, process, operation)
 
             if key in self.edges:
                 value = self.edgeAttrs[key]
                 minTime = self.getMinTime(value[0], time)
                 maxTime = self.getMaxTime(value[1], time)
-                self.edgeAttrs[key] = (minTime, maxTime)
+                self.edgeAttrs[key] = (minTime, maxTime, operation)
             else:
                 self.edges.append(key)
-                self.edgeAttrs[key] = (time, time)
+                self.edgeAttrs[key] = (time, time, operation)
 
 if __name__ == "__main__":
     """

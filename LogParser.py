@@ -10,13 +10,17 @@ class LogParser:
         with open(filePath, "r") as file:
             rows = file.read().split("\n")
             for row in rows:
-                if len(row) > 0:
-                    columns = row[1:-1].split("] [")
-                    entry = {}
-                    for column in columns:
-                        key, value = column.split("=", 1)
-                        entry[key] = value
-                    results.append(entry)
+                try:
+                    if len(row) > 0:
+                        columns = row[1:-1].split("] [")
+                        entry = {}
+                        for column in columns:
+                            key, value = column.split("=", 1)
+                            entry[key] = value
+                        results.append(entry)
+                except:
+                    print("exception in parsing row: {}".format(row))
+
         return results
 
 
@@ -55,18 +59,24 @@ class LogParser:
                     else:
                         eventDirection = ">"
                 if len(entry["timeNanoSec"]) > 0 and entry["timeNanoSec"] != "<NA>":
+                    t1s, t1n = list(map(int, entry["timeNanoSec"].split(".")))
                     timeNanoSec = entry["timeNanoSec"]
                 if len(entry["fdL4Proto"]) > 0 and entry["fdL4Proto"] != "<NA>":
                     protocol = entry["fdL4Proto"]
                 if len(entry["fdName"]) > 0 and entry["fdName"] != "<NA>":
                     fileName = entry["fdName"]
+                elif len(entry["exepath"]) > 0 and entry["exepath"] != "<NA>":
+                    fileName = entry["exepath"]
                 if protocol in protocolTypes and fileName:
                     if "->" in fileName:
                         source, destination = fileName.split("->")
                         sourceIp, sourcePort = source.split(":")
                         destinationIp, destinationPort = destination.split(":")
                     else:
-                        sourceIp, sourcePort = fileName.split(":")
+                        try:
+                            sourceIp, sourcePort = fileName.split(":")
+                        except:
+                            print("no ipv4 available.")
                     fileName = None
 
             except:

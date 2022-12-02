@@ -28,11 +28,11 @@ class Backtrack:
         create graph.
         """
         for edge in self.edges:
-            s, f = edge[0], edge[1]
+            s, f, o = edge[0], edge[1], edge[2]
             if f in self.graph:
-                self.graph[f].append(s)
+                self.graph[f].append((s, f, o))
             else:
-                self.graph[f] = [s]
+                self.graph[f] = [(s, f, o)]
 
     def backtrackGraph(self, fileName):
         """
@@ -42,25 +42,24 @@ class Backtrack:
 
         queue = []
         visitedList = set()
-        for node in self.graph[fileName]:
-            e = (node, fileName)
-            queue.append(e)
+        for edge in self.graph[fileName]:
+            queue.append(edge)
 
         while len(queue) > 0:
             edge = queue.pop(0)
-            s, f = edge[0], edge[1]
-            visitedList.add(f)
+            s, f, o = edge[0], edge[1], edge[2]
+            visitedList.add(edge)
             graph.add_vertices_from([s, f])
             e = graph.add_edge(s, f)
-            edgeAttr = str(self.simplifiedTime[self.edgeAttrs[edge][0]]) + "," + str(self.simplifiedTime[self.edgeAttrs[edge][1]])
+            edgeAttr = o + " " + str(self.simplifiedTime[self.edgeAttrs[edge][0]]) + "," + str(self.simplifiedTime[self.edgeAttrs[edge][1]])
             graph.edge_attrs[e]['label'] = edgeAttr
 
             edgeEndTime = self.simplifiedTime[self.edgeAttrs[edge][1]]
-            if s in self.graph and s not in visitedList:
-                for node in self.graph[s]:
-                    e = (node, s)
-                    if self.simplifiedTime[self.edgeAttrs[e][0]] <= edgeEndTime:
-                        queue.append(e)
+            if s in self.graph:
+                for edge in self.graph[s]:
+                    if edge not in visitedList and edge not in queue:
+                        if self.simplifiedTime[self.edgeAttrs[edge][0]] <= edgeEndTime:
+                            queue.append(edge)
 
         id = 0
         for v in graph.vertices:
@@ -175,22 +174,23 @@ class Backtrack:
 
             key = None
             if direction == ">":
-                key = (process, file)
+                key = (process, file, operation)
             else:
-                key = (file, process)
+                key = (file, process, operation)
 
             if key in self.edges:
                 value = self.edgeAttrs[key]
                 minTime = self.getMinTime(value[0], time)
                 maxTime = self.getMaxTime(value[1], time)
-                self.edgeAttrs[key] = (minTime, maxTime)
+                self.edgeAttrs[key] = (minTime, maxTime, operation)
             else:
                 self.edges.append(key)
-                self.edgeAttrs[key] = (time, time)
+                self.edgeAttrs[key] = (time, time, operation)
 
 if __name__ == "__main__":
     """
     Graph Generator execution starts here.
     """
     backtrack = Backtrack("parsedData.csv")
-    backtrack.backtrackGraph("/home/pavan/Downloads/test.sh")
+    backtrack.backtrackGraph("/home/pavan/Downloads/dir1/dir2/test.sh")
+    # backtrack.backtrackGraph("/proc/2832/stat")
